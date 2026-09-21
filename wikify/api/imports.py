@@ -116,9 +116,11 @@ def generate_wiki(
 	imp = frappe.get_doc("Wikify Import", import_name)
 	if not imp.source_document:
 		frappe.throw(_("Nothing to generate — parse hasn't produced a document yet."))
-	if imp.status not in ("Graphed", "Completed", "Stopped"):
+	if imp.status == "Completed":
+		frappe.throw(_("This wiki has already been published — edit pages directly in the Wiki app."))
+	if imp.status not in ("Graphed", "Stopped"):
 		frappe.throw(
-			f"Approve the section tree first — can only generate from Graphed, Completed or Stopped "
+			f"Approve the section tree first — can only generate from Graphed or Stopped "
 			f"(current status: {imp.status})."
 		)
 	if is_job_enqueued(generate_job.job_id(import_name)):
