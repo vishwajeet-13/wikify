@@ -27,7 +27,13 @@ def add_wiki_title_customizations() -> None:
 	if "wiki" not in frappe.get_installed_apps():
 		return
 	for doctype in WIKI_TITLE_DOCTYPES:
-		if frappe.get_meta(doctype).get_field("title").fieldtype not in WIDE_TEXT_FIELDTYPES:
+		# Checked against the Property Setter row itself, not frappe.get_meta() — the
+		# meta cache is process-level and survives a rolled-back test transaction,
+		# which would otherwise make this wrongly skip re-creating the row.
+		has_setter = frappe.db.exists(
+			"Property Setter", {"doc_type": doctype, "field_name": "title", "property": "fieldtype"}
+		)
+		if not has_setter:
 			make_property_setter(
 				doctype, "title", "fieldtype", "Small Text", "Select", validate_fields_for_doctype=False
 			)
