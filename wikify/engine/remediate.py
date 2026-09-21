@@ -17,11 +17,26 @@ from wikify.rag import events
 ADOPTION_COMPOSITE_RATIO = 0.9
 MIN_CANONICAL_CHARS = 40
 _IMAGE_EMBED_RE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
+_IMAGE_TAG_RE = re.compile(r"(!\[[^\]]*\]\()([^)]*)(\))")
 _MARKUP_RE = re.compile(r"[\s#*_>|`~\-]+")
 
 
 def content_chars(markdown: str) -> int:
 	return len(_MARKUP_RE.sub("", _IMAGE_EMBED_RE.sub("", markdown or "")))
+
+
+def repair_broken_image_tags(markdown: str, page_image: str | None) -> str:
+
+	if not page_image or not markdown or "![" not in markdown:
+		return markdown
+
+	def _fix(m: re.Match) -> str:
+		src = m.group(2)
+		if src.startswith(("/files/", "/private/files/")):
+			return m.group(0)
+		return f"{m.group(1)}{page_image}{m.group(3)}"
+
+	return _IMAGE_TAG_RE.sub(_fix, markdown)
 
 
 def with_page_crop(markdown: str, page_image: str | None) -> str:
@@ -163,6 +178,7 @@ def remediate_pdf(
 				canon_src[p["page_no"]] = method
 			else:
 				canon_md[p["page_no"]] = base_md
+			canon_md[p["page_no"]] = repair_broken_image_tags(canon_md[p["page_no"]], page_image)
 			canon_md[p["page_no"]] = with_page_crop(canon_md[p["page_no"]], page_image)
 
 			doc_cost += store.add_page_cost(p["name"], llm.get_metrics())
