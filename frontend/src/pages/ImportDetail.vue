@@ -20,8 +20,6 @@ import { actionButtonProps } from "@/utils/actionButton";
 import { statusTheme, isActive } from "@/utils/status";
 import PageReview from "@/components/PageReview.vue";
 import SectionTree from "@/components/SectionTree.vue";
-import Explore from "@/components/Explore.vue";
-import WikiGenerate from "@/components/WikiGenerate.vue";
 import { setDocument, setProject } from "@/data/agentContext";
 
 const props = defineProps({
@@ -36,13 +34,14 @@ const isMobile = useIsMobile();
 const imp = useDoc({ doctype: "Wikify Import", name: props.name });
 
 // PDF first (the source is the starting point); the metadata + streaming log ("Logs")
-// moves to the end. The `overview` key is kept so its panel/v-ifs don't churn.
+// moves to the end. The `overview` key is kept so its panel/v-ifs don't churn. Explore
+// and the old generate-only Wiki tab are hidden (not deleted — Explore.vue and
+// WikiGenerate.vue stay on disk, just unreferenced here); "tree" now covers both
+// arranging the section tree and publishing it, so its label became "Wiki".
 const tabs = [
 	{ label: "PDF", key: "pdf" },
 	{ label: "Pages", key: "pages" },
-	{ label: "Tree", key: "tree" },
-	{ label: "Explore", key: "explore" },
-	{ label: "Wiki", key: "wiki" },
+	{ label: "Wiki", key: "tree" },
 	{ label: "Logs", key: "overview" },
 ];
 const tabKeys = tabs.map((t) => t.key);
@@ -347,7 +346,7 @@ const levelColor = { info: "text-ink-gray-7", warn: "text-ink-amber-6", error: "
 					<PageReview ref="pageReview" :source-document="imp.doc?.source_document" />
 				</div>
 
-				<!-- Tree -->
+				<!-- Wiki (tree editing + publish) -->
 				<div
 					v-else-if="tab.key === 'tree'"
 					class="h-[calc(100dvh-9.5rem)] sm:h-[calc(100vh-7rem)]"
@@ -358,29 +357,9 @@ const levelColor = { info: "text-ink-gray-7", warn: "text-ink-amber-6", error: "
 						:doc-title="imp.doc?.import_title || name"
 						:import-name="name"
 						:status="status"
+						:wiki-space="imp.doc?.wiki_space"
 						:initial-section="route.query.section"
 						@graphed="imp.reload()"
-					/>
-				</div>
-
-				<!-- Explore -->
-				<div
-					v-else-if="tab.key === 'explore'"
-					class="h-[calc(100dvh-9.5rem)] sm:h-[calc(100vh-7rem)]"
-				>
-					<Explore :source-document="imp.doc?.source_document" :import-name="name" />
-				</div>
-
-				<!-- Wiki -->
-				<div
-					v-else-if="tab.key === 'wiki'"
-					class="h-[calc(100dvh-9.5rem)] sm:h-[calc(100vh-7rem)]"
-				>
-					<WikiGenerate
-						:source-document="imp.doc?.source_document"
-						:import-name="name"
-						:status="status"
-						:wiki-space="imp.doc?.wiki_space"
 						@generated="imp.reload()"
 					/>
 				</div>

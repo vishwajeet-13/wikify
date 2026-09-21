@@ -4,6 +4,7 @@ import { Badge, Button, Dropdown, Tree, dialog, useCall, useList, toast } from "
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import WikiPreview from "@/components/WikiPreview.vue";
+import WikiPublish from "@/components/WikiPublish.vue";
 import { useIsNarrow } from "@/composables/useMediaQuery";
 import { setSection } from "@/data/agentContext";
 
@@ -12,10 +13,11 @@ const props = defineProps({
 	docTitle: { type: String, default: "Document" },
 	importName: { type: String, default: null },
 	status: { type: String, default: null },
+	wikiSpace: { type: String, default: null },
 	// Deep-link target (0.5 graph view click-through): selected + scrolled to on load.
 	initialSection: { type: String, default: null },
 });
-const emit = defineEmits(["graphed"]);
+const emit = defineEmits(["graphed", "generated"]);
 
 // Flat sections ordered by tree position (`lft`); the nesting is rebuilt client-side.
 const sections = useList({
@@ -304,6 +306,12 @@ async function buildGraph() {
 						:label="graphLabel"
 						:loading="graph.loading"
 						@click="buildGraph"
+					/>
+					<WikiPublish
+						:import-name="importName"
+						:status="status"
+						:wiki-space="wikiSpace"
+						@generated="emit('generated')"
 					/>
 				</div>
 				<!-- A tighter indent on narrow screens: ICAI titles run to 140 chars and every
