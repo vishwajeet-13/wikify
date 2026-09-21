@@ -180,7 +180,12 @@ const wikiUrl = computed(() => {
 						class="mb-3"
 						v-model="newName"
 					/>
-					<FormControl type="text" label="Route" placeholder="my-manual" v-model="newRoute" />
+					<FormControl
+						type="text"
+						label="Route"
+						placeholder="my-manual"
+						v-model="newRoute"
+					/>
 				</template>
 
 				<div class="mt-5 flex items-center gap-2">
