@@ -139,7 +139,7 @@ const wikiUrl = computed(() => {
 		</a>
 		<Button
 			size="sm"
-			:variant="alreadyGenerated ? 'subtle' : 'solid'"
+			variant="subtle"
 			:label="alreadyGenerated ? 'Regenerate' : 'Publish'"
 			:disabled="!canPublish"
 			:title="!canPublish ? 'Approve the section tree first' : undefined"

@@ -43,7 +43,13 @@ const tabs = [
 	{ label: "Logs", key: "overview" },
 ];
 const tabKeys = tabs.map((t) => t.key);
-const activeTab = ref(Math.max(0, tabKeys.indexOf(props.tab)));
+// The old generate-only "Wiki" tab folded into "tree" (now labeled Wiki) — old
+// `/import/:name/wiki` links/bookmarks should land there, not fall through to "pdf".
+const LEGACY_TAB_ALIASES = { wiki: "tree" };
+function resolveTabKey(key) {
+	return tabKeys.includes(key) ? key : LEGACY_TAB_ALIASES[key] ?? key;
+}
+const activeTab = ref(Math.max(0, tabKeys.indexOf(resolveTabKey(props.tab))));
 
 // Persist the active tab in the route (path param) so a refresh restores it. Use
 // replace so tab-switching doesn't flood browser history; preserve any query (the
@@ -62,7 +68,7 @@ watch(activeTab, (i) => {
 watch(
 	() => props.tab,
 	(key) => {
-		const i = tabKeys.indexOf(key);
+		const i = tabKeys.indexOf(resolveTabKey(key));
 		if (i >= 0 && i !== activeTab.value) activeTab.value = i;
 	}
 );
