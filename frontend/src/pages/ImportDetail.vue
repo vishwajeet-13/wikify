@@ -107,6 +107,12 @@ watch(
 
 const pageReview = ref(null);
 const sectionTree = ref(null);
+// A publish just assigned each included section its wiki_document — the mounted tree
+// still holds the pre-publish (empty) values until refetched.
+function onGenerated() {
+	imp.reload();
+	sectionTree.value?.reload();
+}
 
 // Document-level audit score + LLM spend (0.4 slice 23) live on Source Document.
 const sdStats = useList({
@@ -149,6 +155,9 @@ function onProgress(payload) {
 			pageReview.value?.reload();
 			sectionTree.value?.reload();
 		}
+		// A finished publish assigned each included section its wiki_document — the
+		// mounted tree still holds the pre-publish (empty) values until refetched.
+		if (payload.status === "Completed") sectionTree.value?.reload();
 		sdStats.reload();
 	}
 }
@@ -364,7 +373,7 @@ const levelColor = { info: "text-ink-gray-7", warn: "text-ink-amber-6", error: "
 						:wiki-space="imp.doc?.wiki_space"
 						:initial-section="route.query.section"
 						@graphed="imp.reload()"
-						@generated="imp.reload()"
+						@generated="onGenerated"
 					/>
 				</div>
 
