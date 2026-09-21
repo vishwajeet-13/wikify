@@ -1,14 +1,3 @@
-"""Manual, user-driven figure embedding for one page: crop a precise region out of the
-source PDF in place of one existing image tag — leaving the rest of the page's markdown
-untouched.
-
-Complements `reparse.embed_page_image`'s caption mode (agent-driven, requires a unique
-caption on the page) by resolving the tag positionally instead — caption + which
-occurrence of it — so a page with duplicate captions (e.g. two figures both called
-"Button") can still be targeted precisely from the UI, where the user clicked a
-specific image rather than typing a caption.
-"""
-
 from __future__ import annotations
 
 import fitz
