@@ -5,7 +5,7 @@
 // deterministic whole-page-photo fallback (auto-repair + use_page_image) this closes
 // the loop on.
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
-import { Dialog, Button, ErrorMessage, call } from "frappe-ui";
+import { Dialog, Button, ErrorMessage, useCall } from "frappe-ui";
 import Cropper from "cropperjs";
 import "cropperjs/dist/cropper.css";
 
@@ -55,32 +55,36 @@ watch(
 	{ immediate: true }
 );
 
-const cropping = ref(false);
+const cropFigure = useCall({
+	url: "/api/v2/method/wikify.api.pages.crop_page_figure",
+	method: "POST",
+	immediate: false,
+});
 const cropError = ref("");
 async function submitCrop() {
 	if (!cropper || !imageEl.value) return;
 	const img = imageEl.value;
 	const data = cropper.getData(true);
-	cropping.value = true;
 	cropError.value = "";
-	try {
-		await call("wikify.api.pages.crop_page_figure", {
-			source_document: props.target.sourceDocument,
-			page_no: props.target.pageNo,
-			caption: props.target.caption,
-			occurrence: props.target.occurrence,
-			x0: data.x / img.naturalWidth,
-			y0: data.y / img.naturalHeight,
-			x1: (data.x + data.width) / img.naturalWidth,
-			y1: (data.y + data.height) / img.naturalHeight,
-		});
-		emit("saved");
-		open.value = false;
-	} catch (e) {
-		cropError.value = e?.messages?.[0] || e?.message || "Couldn't crop that figure.";
-	} finally {
-		cropping.value = false;
+	await cropFigure.submit({
+		source_document: props.target.sourceDocument,
+		page_no: props.target.pageNo,
+		caption: props.target.caption,
+		occurrence: props.target.occurrence,
+		x0: data.x / img.naturalWidth,
+		y0: data.y / img.naturalHeight,
+		x1: (data.x + data.width) / img.naturalWidth,
+		y1: (data.y + data.height) / img.naturalHeight,
+	});
+	if (cropFigure.error) {
+		cropError.value =
+			cropFigure.error?.messages?.[0] ||
+			cropFigure.error?.message ||
+			"Couldn't crop that figure.";
+		return;
 	}
+	emit("saved");
+	open.value = false;
 }
 </script>
 
@@ -105,7 +109,7 @@ async function submitCrop() {
 				<Button
 					label="Crop &amp; embed"
 					variant="solid"
-					:loading="cropping"
+					:loading="cropFigure.loading"
 					:disabled="!cropperReady"
 					@click="submitCrop"
 				/>

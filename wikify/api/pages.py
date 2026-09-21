@@ -3,6 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
+from wikify.api.permission import assert_readable
 from wikify.engine import figure
 
 
@@ -17,6 +18,7 @@ def crop_page_figure(
 	x1: float,
 	y1: float,
 ) -> dict:
+	assert_readable(None, source_document)
 	# `from __future__ import annotations` (project-wide convention) turns these into
 	# string annotations at runtime, which defeats Frappe's pydantic-based auto-coercion
 	# for whitelisted methods — cast explicitly instead of trusting it.

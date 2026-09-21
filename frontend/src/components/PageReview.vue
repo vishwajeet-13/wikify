@@ -245,10 +245,10 @@ function decorateFigures(html) {
 		wrapper.appendChild(img);
 		const scrim = doc.createElement("span");
 		scrim.className =
-			"pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-black/0 transition-colors group-hover:bg-black/30";
+			"pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-surface-gray-7/0 transition-colors group-hover:bg-surface-gray-7/30";
 		const badge = doc.createElement("span");
 		badge.className =
-			"rounded-full bg-surface-gray-7/90 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100";
+			"rounded-full bg-surface-gray-7/90 p-2 text-ink-white opacity-0 transition-opacity group-hover:opacity-100";
 		badge.innerHTML = EDIT_ICON_SVG;
 		scrim.appendChild(badge);
 		wrapper.appendChild(scrim);

@@ -75,6 +75,19 @@ class TestFigureCrop(FrappeTestCase):
 		self.assertIn(f"![Button]({result['image_url']})", page.canonical_markdown)
 		self.assertNotIn("b.png", page.canonical_markdown)
 
+	def test_identical_duplicate_tags_replace_the_clicked_occurrence(self):
+		self._add_page("![Button](same.png) then ![Button](same.png)")
+		result = figure.crop_page_figure(
+			self.sd.name, 1, "Button", 1, {"x0": 0.1, "y0": 0.1, "x1": 0.4, "y1": 0.4}
+		)
+		page = frappe.get_all(
+			"Source Page", filters={"source_document": self.sd.name}, fields=["canonical_markdown"]
+		)[0]
+		self.assertEqual(
+			page.canonical_markdown,
+			f"![Button](same.png) then ![Button]({result['image_url']})",
+		)
+
 	def test_unknown_caption_raises(self):
 		self._add_page("![Diagram](image1.png)")
 		with self.assertRaises(ValueError):

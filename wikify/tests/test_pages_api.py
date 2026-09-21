@@ -75,3 +75,39 @@ class TestPagesApi(FrappeTestCase):
 				x1="0.4",
 				y1="0.4",
 			)
+
+
+class TestPagesApiAcl(FrappeTestCase):
+	def setUp(self):
+		self.project = frappe.get_doc(
+			{"doctype": "Wikify Project", "project_name": f"Pages ACL {frappe.generate_hash(length=6)}"}
+		).insert()
+		self.sd = frappe.get_doc(
+			{"doctype": "Source Document", "title": "Pages ACL Test", "project": self.project.name}
+		).insert(ignore_permissions=True)
+		self.addCleanup(_cleanup.delete_document, self.sd.name)
+		self.addCleanup(frappe.set_user, "Administrator")
+		frappe.get_doc(
+			{
+				"doctype": "Wikify Import",
+				"import_title": "Pages ACL Test Import",
+				"project": self.project.name,
+				"pdf": _make_pdf_file(),
+				"source_document": self.sd.name,
+			}
+		).insert(ignore_permissions=True)
+		self.page_name = store.add_page(self.sd.name, 1, "visual", _PNG, "![Diagram](image1.png)")
+
+	def test_cropping_a_page_of_an_unreadable_document_is_refused(self):
+		frappe.set_user("Guest")
+		with self.assertRaises(frappe.PermissionError):
+			pages_api.crop_page_figure(
+				source_document=self.sd.name,
+				page_no="1",
+				caption="Diagram",
+				occurrence="0",
+				x0="0.1",
+				y0="0.1",
+				x1="0.4",
+				y1="0.4",
+			)

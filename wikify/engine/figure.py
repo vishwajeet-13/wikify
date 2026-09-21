@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import fitz
-import frappe
-from frappe.utils.file_manager import save_file
 
 from wikify.engine import store
-from wikify.engine.tags import find_tags
+from wikify.engine.tags import find_tag_spans
 
 # Sharper than the cached page thumbnail (rendered at settings.render_dpi, ~150) so a
 # crop of a small in-page figure isn't a blurry upscale.
@@ -15,34 +13,21 @@ _CROP_DPI = 400
 _MIN_CROP_POINTS = 10
 
 
-def _pdf_path(source_document: str) -> str | None:
-	pdf_url = frappe.db.get_value("Wikify Import", {"source_document": source_document}, "pdf")
-	if not pdf_url:
-		return None
-	file_name = frappe.db.get_value("File", {"file_url": pdf_url}, "name")
-	return frappe.get_doc("File", file_name).get_full_path() if file_name else None
-
-
 def _page_row(source_document: str, page_no: int) -> dict:
-	row = frappe.db.get_value(
-		"Source Page",
-		{"source_document": source_document, "page_no": page_no},
-		["name", "canonical_markdown", "baseline_markdown"],
-		as_dict=True,
-	)
+	row = store.get_page_for_crop(source_document, page_no)
 	if not row:
 		raise ValueError(f"Page {page_no} of {source_document} not found.")
 	return row
 
 
-def _resolve_tag(markdown: str, caption: str, occurrence: int) -> str:
-	tags = find_tags(markdown, caption)
-	if occurrence < 0 or occurrence >= len(tags):
+def _resolve_tag_span(markdown: str, caption: str, occurrence: int) -> tuple[int, int]:
+	spans = find_tag_spans(markdown, caption)
+	if occurrence < 0 or occurrence >= len(spans):
 		raise ValueError(
 			f"Couldn't find image tag '{caption}' (occurrence {occurrence}) on this page — "
 			"it may have changed. Reload the page and try again."
 		)
-	return tags[occurrence]
+	return spans[occurrence]
 
 
 def _clip_rect(page_rect: fitz.Rect, bbox: dict) -> fitz.Rect:
@@ -56,9 +41,9 @@ def _clip_rect(page_rect: fitz.Rect, bbox: dict) -> fitz.Rect:
 def crop_page_figure(source_document: str, page_no: int, caption: str, occurrence: int, bbox: dict) -> dict:
 	page = _page_row(source_document, page_no)
 	old_md = page.canonical_markdown or page.baseline_markdown or ""
-	old_tag = _resolve_tag(old_md, caption, occurrence)
+	start, end = _resolve_tag_span(old_md, caption, occurrence)
 
-	pdf_path = _pdf_path(source_document)
+	pdf_path = store.get_import_pdf_path(source_document)
 	if not pdf_path:
 		raise RuntimeError(f"Couldn't locate the source PDF for {source_document}.")
 
@@ -74,7 +59,7 @@ def crop_page_figure(source_document: str, page_no: int, caption: str, occurrenc
 		zoom = _CROP_DPI / 72.0
 		crop_png = fpage.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=clip).tobytes("png")
 
-	file_doc = save_file(f"page-{page_no:04d}-crop.png", crop_png, "Source Page", page.name, is_private=1)
-	new_md = old_md.replace(old_tag, f"![{caption}]({file_doc.file_url})", 1)
+	file_doc = store.save_crop_file(page.name, page_no, crop_png)
+	new_md = old_md[:start] + f"![{caption}]({file_doc.file_url})" + old_md[end:]
 	store.set_canonical_markdown(page.name, new_md)
 	return {"page_no": page_no, "image_url": file_doc.file_url}
