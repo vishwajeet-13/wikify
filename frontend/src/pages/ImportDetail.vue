@@ -34,10 +34,8 @@ const isMobile = useIsMobile();
 const imp = useDoc({ doctype: "Wikify Import", name: props.name });
 
 // PDF first (the source is the starting point); the metadata + streaming log ("Logs")
-// moves to the end. The `overview` key is kept so its panel/v-ifs don't churn. Explore
-// and the old generate-only Wiki tab are hidden (not deleted — Explore.vue and
-// WikiGenerate.vue stay on disk, just unreferenced here); "tree" now covers both
-// arranging the section tree and publishing it, so its label became "Wiki".
+// moves to the end. The `overview` key is kept so its panel/v-ifs don't churn.
+// `key: "tree"` kept as-is (route param) while its label became "Wiki".
 const tabs = [
 	{ label: "PDF", key: "pdf" },
 	{ label: "Pages", key: "pages" },
