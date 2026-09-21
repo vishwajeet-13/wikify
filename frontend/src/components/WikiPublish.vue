@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import {
+	Badge,
 	Button,
 	Dialog,
 	FormControl,
@@ -26,6 +27,9 @@ const canPublish = computed(() =>
 );
 const generating = computed(() => props.status === "Generating Wiki");
 const alreadyGenerated = computed(() => props.status === "Completed" || !!props.wikiSpace);
+// A completed publish is a one-way handoff — the API rejects a regenerate from here on,
+// so the control disappears rather than sitting there disabled.
+const published = computed(() => props.status === "Completed");
 
 // Existing spaces (also resolves the current space's route for the "View wiki" link).
 const spaces = useList({
@@ -137,7 +141,9 @@ const wikiUrl = computed(() => {
 			{{ currentSpace?.space_name || "View wiki" }}
 			<span aria-hidden>↗</span>
 		</a>
+		<Badge v-if="published" label="Published" theme="green" variant="subtle" size="sm" />
 		<Button
+			v-else
 			size="sm"
 			variant="subtle"
 			:label="alreadyGenerated ? 'Regenerate' : 'Publish'"
@@ -147,6 +153,7 @@ const wikiUrl = computed(() => {
 		/>
 
 		<Dialog
+			v-if="!published"
 			v-model="open"
 			:options="{ title: alreadyGenerated ? 'Regenerate wiki' : 'Publish wiki', size: 'lg' }"
 		>

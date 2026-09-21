@@ -36,6 +36,7 @@ const sections = useList({
 		"include_in_wiki",
 		"markdown",
 		"lint_issues",
+		"wiki_document",
 	],
 	filters: computed(() => ({ source_document: props.sourceDocument || "__none__" })),
 	orderBy: "lft asc",
@@ -118,7 +119,24 @@ const isNarrow = useIsNarrow();
 const showPreview = ref(!!props.initialSection);
 const SplitHost = computed(() => (isNarrow.value ? "div" : Splitpanes));
 const SplitPane = computed(() => (isNarrow.value ? "div" : Pane));
+
+// A completed publish hands editing off to the Wiki app — clicking a page opens its
+// real editor there instead of Wikify's own (now-stale-on-regenerate) preview.
+const published = computed(() => props.status === "Completed");
 function onSelect(name) {
+	if (published.value) {
+		const wikiDocument = byName.value[name]?.wiki_document;
+		if (wikiDocument && props.wikiSpace) {
+			window.open(
+				`/wiki-app/spaces/${props.wikiSpace}/page/${wikiDocument}`,
+				"_blank",
+				"noopener"
+			);
+		} else {
+			toast.error("This page isn't in the published wiki.");
+		}
+		return;
+	}
 	selectedName.value = name;
 	showPreview.value = true;
 }
@@ -314,6 +332,12 @@ async function buildGraph() {
 						@generated="emit('generated')"
 					/>
 				</div>
+				<p
+					v-if="published"
+					class="border-b border-outline-gray-1 bg-surface-gray-1 px-3 py-2 text-xs text-ink-gray-6"
+				>
+					This wiki has been published — click a page below to edit it in the Wiki app.
+				</p>
 				<!-- A tighter indent on narrow screens: ICAI titles run to 140 chars and every
 				     nesting step is width the title no longer gets. -->
 				<div class="flex-1 overflow-auto p-2 [--tree-indent:14px] lg:[--tree-indent:24px]">
