@@ -64,9 +64,7 @@ def _clip_rect(page_rect: fitz.Rect, bbox: dict) -> fitz.Rect:
 	return fitz.Rect(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
 
 
-def crop_page_figure(
-	source_document: str, page_no: int, caption: str, occurrence: int, bbox: dict
-) -> dict:
+def crop_page_figure(source_document: str, page_no: int, caption: str, occurrence: int, bbox: dict) -> dict:
 	page = _page_row(source_document, page_no)
 	old_md = page.canonical_markdown or page.baseline_markdown or ""
 	old_tag = _resolve_tag(old_md, caption, occurrence)

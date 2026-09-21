@@ -83,7 +83,9 @@ class TestFigureCrop(FrappeTestCase):
 	def test_occurrence_out_of_range_raises(self):
 		self._add_page("![Diagram](image1.png)")
 		with self.assertRaises(ValueError):
-			figure.crop_page_figure(self.sd.name, 1, "Diagram", 1, {"x0": 0.1, "y0": 0.1, "x1": 0.4, "y1": 0.4})
+			figure.crop_page_figure(
+				self.sd.name, 1, "Diagram", 1, {"x0": 0.1, "y0": 0.1, "x1": 0.4, "y1": 0.4}
+			)
 
 	def test_degenerate_crop_raises(self):
 		self._add_page("![Diagram](image1.png)")

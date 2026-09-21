@@ -26,7 +26,6 @@ def content_chars(markdown: str) -> int:
 
 
 def repair_broken_image_tags(markdown: str, page_image: str | None) -> str:
-
 	if not page_image or not markdown or "![" not in markdown:
 		return markdown
 
