@@ -64,9 +64,7 @@ const spaceOptions = computed(() =>
 
 const open = ref(false);
 
-// Regeneration sweeps every Wiki Document not backed by an included section, so
-// publishing with nothing included would wipe an already-generated space down to
-// its root group. Loaded on dialog open and gates canGenerate below.
+// Regenerating with nothing included would wipe the space down to its root group.
 const preview = useCall({
 	url: "/api/v2/method/wikify.api.imports.preview_wiki",
 	method: "GET",
@@ -228,8 +226,8 @@ const wikiUrl = computed(() => {
 					v-else-if="preview.data && !hasSectionsToPublish"
 					class="mt-2 text-xs text-ink-amber-6"
 				>
-					No sections are included in the wiki — nothing to publish. Include sections in the
-					tree first.
+					No sections are included in the wiki — nothing to publish. Include sections in
+					the tree first.
 				</p>
 			</template>
 		</Dialog>

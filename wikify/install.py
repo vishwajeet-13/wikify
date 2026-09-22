@@ -27,11 +27,7 @@ def add_wiki_title_customizations() -> None:
 	if "wiki" not in frappe.get_installed_apps():
 		return
 	for doctype in WIKI_TITLE_DOCTYPES:
-		# Checked against the Property Setter row itself, not frappe.get_meta() — the
-		# meta cache is process-level and survives a rolled-back test transaction,
-		# which would otherwise make this wrongly skip re-creating the row. The value
-		# is checked too, not just existence — a setter left narrow (e.g. "Data") by
-		# something else must still be repaired.
+		# frappe.get_meta() is process-cached and can be stale after a rolled-back test transaction.
 		setter_value = frappe.db.get_value(
 			"Property Setter", {"doc_type": doctype, "field_name": "title", "property": "fieldtype"}, "value"
 		)
