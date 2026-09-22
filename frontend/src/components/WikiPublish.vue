@@ -64,14 +64,31 @@ const spaceOptions = computed(() =>
 
 const open = ref(false);
 
+// Regeneration sweeps every Wiki Document not backed by an included section, so
+// publishing with nothing included would wipe an already-generated space down to
+// its root group. Loaded on dialog open and gates canGenerate below.
+const preview = useCall({
+	url: "/api/v2/method/wikify.api.imports.preview_wiki",
+	method: "GET",
+	immediate: false,
+});
+watch(open, (isOpen) => {
+	if (isOpen) preview.submit({ import_name: props.importName });
+});
+const hasSectionsToPublish = computed(
+	() => (preview.data?.pages ?? 0) + (preview.data?.groups ?? 0) > 0
+);
+
 // Generate / regenerate.
 const generate = useCall({
 	url: "/api/v2/method/wikify.api.imports.generate_wiki",
 	method: "POST",
 	immediate: false,
 });
-const canGenerate = computed(() =>
-	mode.value === "existing" ? !!targetSpace.value : !!(newName.value && newRoute.value)
+const canGenerate = computed(
+	() =>
+		hasSectionsToPublish.value &&
+		(mode.value === "existing" ? !!targetSpace.value : !!(newName.value && newRoute.value))
 );
 async function runGenerate() {
 	const params = { import_name: props.importName };
@@ -206,6 +223,13 @@ const wikiUrl = computed(() => {
 				</div>
 				<p v-if="generating" class="mt-2 text-xs text-ink-gray-5">
 					Generating… watch progress in the header.
+				</p>
+				<p
+					v-else-if="preview.data && !hasSectionsToPublish"
+					class="mt-2 text-xs text-ink-amber-6"
+				>
+					No sections are included in the wiki — nothing to publish. Include sections in the
+					tree first.
 				</p>
 			</template>
 		</Dialog>

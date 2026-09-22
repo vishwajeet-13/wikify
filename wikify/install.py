@@ -29,11 +29,13 @@ def add_wiki_title_customizations() -> None:
 	for doctype in WIKI_TITLE_DOCTYPES:
 		# Checked against the Property Setter row itself, not frappe.get_meta() — the
 		# meta cache is process-level and survives a rolled-back test transaction,
-		# which would otherwise make this wrongly skip re-creating the row.
-		has_setter = frappe.db.exists(
-			"Property Setter", {"doc_type": doctype, "field_name": "title", "property": "fieldtype"}
+		# which would otherwise make this wrongly skip re-creating the row. The value
+		# is checked too, not just existence — a setter left narrow (e.g. "Data") by
+		# something else must still be repaired.
+		setter_value = frappe.db.get_value(
+			"Property Setter", {"doc_type": doctype, "field_name": "title", "property": "fieldtype"}, "value"
 		)
-		if not has_setter:
+		if setter_value not in WIDE_TEXT_FIELDTYPES:
 			make_property_setter(
 				doctype, "title", "fieldtype", "Small Text", "Select", validate_fields_for_doctype=False
 			)
