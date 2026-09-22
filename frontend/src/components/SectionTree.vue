@@ -318,6 +318,7 @@ async function buildGraph() {
 					/>
 					<span v-if="mutating" class="text-xs text-ink-gray-4">Saving…</span>
 					<Button
+						v-if="!published"
 						class="ml-auto shrink-0"
 						size="sm"
 						variant="solid"
@@ -326,6 +327,7 @@ async function buildGraph() {
 						@click="buildGraph"
 					/>
 					<WikiPublish
+						class="ml-auto"
 						:import-name="importName"
 						:status="status"
 						:wiki-space="wikiSpace"
@@ -344,9 +346,9 @@ async function buildGraph() {
 					<Tree
 						:nodes="tree"
 						node-key="name"
-						draggable
+						:draggable="!published"
 						:move="canMove"
-						:disabled="mutating"
+						:disabled="mutating || published"
 						@drag-end="onDragEnd"
 					>
 						<template #item="{ node, expanded, hasChildren, toggle: toggleNode }">
@@ -424,8 +426,13 @@ async function buildGraph() {
 								</button>
 
 								<!-- Touch has no hover, so the row menu stays visible on narrow
-								     screens instead of being hover-revealed. -->
-								<Dropdown :options="rowActions(node)" placement="right">
+								     screens instead of being hover-revealed. Hidden once published —
+								     the API rejects these edits anyway; the Wiki app owns them now. -->
+								<Dropdown
+									v-if="!published"
+									:options="rowActions(node)"
+									placement="right"
+								>
 									<button
 										class="shrink-0 rounded p-0.5 text-ink-gray-5 hover:bg-surface-gray-3 lg:opacity-0 lg:group-hover:opacity-100"
 										@click.stop
